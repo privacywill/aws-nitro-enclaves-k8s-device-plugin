@@ -5,17 +5,17 @@
 
 FROM amazonlinux:2 as builder
 
-RUN yum install go -y
+RUN yum install wget tar gzip -y && wget https://go.dev/dl/go1.23.4.linux-amd64.tar.gz && rm -rf /usr/local/go && tar -C /usr/local -xzf go1.23.4.linux-amd64.tar.gz
 
 WORKDIR build_dir/
 COPY *.go ./
 COPY go.sum ./
 
-RUN go mod init k8s-ne-device-plugin && \
+RUN export PATH=$PATH:/usr/local/go/bin && go mod init k8s-ne-device-plugin && \
     go mod tidy && \
     go mod vendor
 
-RUN CGO_ENABLED=0 go build -a -ldflags='-s -w -extldflags="-static"' .
+RUN export PATH=$PATH:/usr/local/go/bin && CGO_ENABLED=0 go build -a -ldflags='-s -w -extldflags="-static"' .
 
 # Create a bare minumum image that only contains the device plugin binary.
 
